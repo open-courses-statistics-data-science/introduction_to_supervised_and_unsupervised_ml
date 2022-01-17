@@ -5,7 +5,7 @@ The course consists of two lectures and three problem sets.
 
 
 
-## Lectures
+## Lectures
 
 The lectures are:
 
@@ -24,7 +24,7 @@ The lectures are:
 
 
 
-## Problem sets
+## Problem sets
 
 AM:
 
