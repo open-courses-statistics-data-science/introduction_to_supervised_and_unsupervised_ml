@@ -1,0 +1,152 @@
+---
+title: "Problem sheet: clustering and PCA"
+output: html_notebook
+---
+
+# Clustering
+In this problem set, we are going to write our own k-means clustering algorithm. The dataset we are going to use is the famous (Fisher's or Anderson's) iris data set, which gives the measurements in centimeters of the variables sepal length and width and petal length and width, respectively, for 50 flowers from each of 3 species of iris. The species are Iris setosa, versicolor, and virginica.
+
+1. Load the iris data and examine the data. Here we are not going to use numerical data on sepal length, sepal width, petal length and petal width to cluster the specimens.
+```{r}
+rm(list=ls())
+library(tidyverse)
+library(reshape2)
+
+iris
+x <- iris %>% 
+  select(-Species)
+```
+
+
+2. Write a function which samples $k$ data points (without replacement) to be the initial centroids.
+```{r}
+f_choose_random_centroids <- function(x, k=3) {
+  idxs <- 1:nrow(x)
+  idxs <- sample(idxs, k)
+  x[idxs, ]
+}
+```
+
+3. Write a function which calculates the Euclidean distance between two points.
+```{r}
+f_eucl_dist <- function(x1, x2) {
+  sqrt(sum((x1 - x2)^2))
+}
+```
+
+4. Write a function which finds the distance between each row in a matrix (where each of its rows is a data point) and a centroid.
+```{r}
+f_eucl_dist_all <- function(x, centroid) {
+  map_dbl(seq(1, nrow(x), 1), ~f_eucl_dist(centroid, x[., ]))
+}
+```
+
+5. Write a function which finds the distance between each row in a matrix (where each of its rows is a data point) and a list of centroids. It may be easiest to return these distances in a matrix, where each row corresponds to a data point and each column to a centroid.
+```{r}
+f_eucl_dist_centroids <- function(x, centroids) {
+  m_dist <- matrix(nrow = nrow(x), ncol = nrow(centroids))
+  for(i in 1:nrow(centroids))
+    m_dist[, i] <- f_eucl_dist_all(x, centroids[i, ])
+  m_dist
+}
+```
+
+6. Write a function which assigns each data point to a cluster according to its nearest centroid. The function should return a list of centroid ids: one per each data point.
+```{r}
+f_cluster <- function(x, centroids) {
+  m_dist <- f_eucl_dist_centroids(x, centroids)
+  cluster_id <- vector(length = nrow(m_dist))
+  for(i in seq_along(cluster_id))
+    cluster_id[i] <- which.min(m_dist[i, ])
+  cluster_id
+}
+```
+
+7. Create a function which calculates new centroids using the points which have been assigned to each cluster.
+```{r}
+f_recalculate_centroids <- function(cluster_ids, x) {
+  df <- x %>% 
+    as.data.frame() %>% 
+    mutate(cluster=cluster_ids)
+  mu <- df %>% 
+    group_by(cluster) %>% 
+    summarise_all(.funs=mean) %>% 
+    select(-cluster)
+  mu
+}
+```
+
+8. Putting your functions together in sequence create a function that does k-means clustering! To do this, do the following:
+
+create a for loop where:
+
+- if first time round loop, choose random centroids to be data points from the dataset; if subsequent, calculate centroids using your function that determines the centroids of each cluster
+- calculates distance of all points from all centroids, and assigns clusters to the points based on their minimal distance
+
+For simplicitly, here we terminate the loop after 50 iterations.
+```{r}
+# here I just use 50 iterations as a stopping criteria
+# better to look at cluster identities and only stop
+# once these stop changing
+f_kmeans <- function(x, k, niter=50) {
+  for(i in 1:niter) {
+    if(i == 1)
+      centroids <- f_choose_random_centroids(x, k)
+    else
+      centroids <- f_recalculate_centroids(cluster_ids, x)
+    cluster_ids <- f_cluster(x, centroids)
+  }
+  cluster_ids
+}
+```
+
+9. Using $k=3$ clusters, use your k-means clustering function to determine cluster ids.
+```{r}
+clusters <- f_kmeans(x, 3)
+```
+
+10. How do your clusters correspond to species?
+```{r}
+df <- iris %>% 
+  as.data.frame() %>% 
+  mutate(cluster=clusters)
+table(df$Species, df$cluster)
+```
+Does a pretty good job of separating out the three species. Setosa is more different from the other two classes.
+
+11. What happens if you choose only two clusters?
+```{r}
+clusters <- f_kmeans(x, 2)
+df <- iris %>% 
+  as.data.frame() %>% 
+  mutate(cluster=clusters)
+table(df$Species, df$cluster)
+```
+Splits data in setosa and others. This makes sense, since assuming 3 clusters mixtured up the versicolor and virginica datasets.
+
+# The maths behind PCA
+1. Suppose $X\in \mathbb{R}^{n\times k}$ has rows ($x_i'$) that correspond to individual observations of a system, such that $x_i\sim\mathcal{N}(0,\Sigma)$. Why does $\widehat \Sigma = \frac{1}{n} X'X$ seem a reasonable estimator of $\Sigma$?
+
+$\frac{1}{n} X'X = \frac{1}{n} \sum_{i=1}^n x_i x_i'$
+
+The summed term: $\mathbb{E}[x_i x_i']=\Sigma$ because this is the definition of the covariance matrix. So, $\frac{1}{n}\sum_{i=1}^n x_i x_i'$ is the law or large numbers estimate of this (which also corresponds to the method of moments estimator and the maximum likelihood estimator). (It turns out this estimator is actually biased, so $\frac{1}{n-1} X'X$ is used in practice.)
+
+2. We transform the system according to $Y=X A'$ where $A\in\mathbb{R}^{k\times k}$. Find the distribution of a row of $Y$ (we call $y_i'$).
+
+We can write $y_i=Ax_i$ which has variance $\mathbb{E}(y_i y_i') = \mathbb{E}(A x_i x_i' A') = A \mathbb{E}(x_i x_i') A' = A\Sigma A'$. Because a normal multiplied by a linear factor is still a normal, we have:
+
+$y_i\sim\mathcal{N}(0,A\Sigma A')$
+
+3. Show that choosing $A'$ to have eigenvectors of $\Sigma$ as its columns results in a diagonal covariance matrix in the transformed system.
+
+A covariance matrix is eigendecomposed as:
+
+$\Sigma = A' D A$,
+
+where $A'$ is orthogonal (meaning $A A'=I$) and contains eigenvectors as columns and $D$ contains corresponding eigenvalues.
+
+We can then write: $A\Sigma A=A A' D A A'=D$.
+
+4. In the transformed system, what are the estimates of the variance of each dimension?
+
+The variance contributed by a given dimension is just the diagonal element of $D$, which corresponds to the eigenvalues of $\Sigma$.

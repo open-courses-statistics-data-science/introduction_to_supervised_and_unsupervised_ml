@@ -1,0 +1,46 @@
+---
+title: "Titanic: logistic regression"
+output: html_notebook
+---
+
+```{r}
+rm(list=ls())
+library(tidyverse)
+```
+
+1. Load the Titanic dataset.
+
+2. Make a plot of the fraction surviving in each class
+
+3. In this practical, we are going to create a logistic regression model and use it to investigate how passenger class influenced survival probabilities. To do so, we are actually going to use dummy variables for the classes: binary variables which take on the value 0 if not true and 1 if true. Create dummy variables for classes 1 and 2. This implicitly means that the 3rd class will be the base case that we compare to.
+
+4. Write an R function for the logistic function: $\theta = \frac{1}{1 + \exp(-x)}$. The function takes $x$ as its sole argument.
+
+5. Plot the logistic function for $x\in[-8,8]$.
+
+6. We are going to use the logistic function to represent the probability of a passenger surviving. But to do so, we need to write a function which returns the linear combination of $\beta_0 + \beta_1 z_1 + \beta_2 z_2$. The function should take as input $\beta_0, \beta_1, \beta_2$ (the regression parameters) and the covariates $z_1$ and $z_2$.
+
+7. Write a function which returns the probability:
+
+$$
+\theta_i = \text{logistic}(\beta_0 + \beta_1 z_1 + \beta_2 z_2)
+$$
+where "logistic" is the function you created above. The function should takes as input $\beta_0, \beta_1, \beta_2$ (the regression parameters) and the covariates $z_1$ and $z_2$.
+
+8. We are now going to write a function which returns the log-likelihood for a single set, $i$, of data points: $(z_{1i}, z_{2i}, S_i)$ where $S_i\in\{0,1\}$ represents whether a passenger survived. In logistic regression, we assume that $S_i\sim \text{Bernoulli}(\theta_i)$. This means that the likelihood, $\mathcal{L}_i$, for a single set of data points is given by:
+
+9. Write a function with takes as input $\beta_0, \beta_1, \beta_2$ (the regression parameters), the covariates $z_1$ and $z_2$ and (crucially!) a value of $S_i$ and returns $\mathcal{L}_i$.
+
+10. The overall likelihood of observations is given by the product of the individual likelihoods of each data point, since we assume that the data are (conditionally) independent given the parameters:
+
+11. Write a function that takes as input your processed Titanic dataset and the parameters $\beta_0, \beta_1, \beta_2$ and returns the likelihood. In calculating the likelihood, specify that $z_1$ and $z_2$ should be your class dummies.
+
+12. We are now going to try to estimate the parameters $\beta_0$ and $\beta_1$ by doing a grid search. We start by fixing $\beta_0=-1.14$ (this is the maximum likelihood value of the parameter). We are then going to do a grid search across all combinations of the following values of $\beta_1=(0, 1, 1.67, 2, 2.5)$ and $\beta_2=(-1, 0, 1, 2, 3)$. For each of the 25 combinations of both sets of parameters, calculate the likelihood. In doing so, find parameters that are close to the maximum likelihood values.
+
+13. Run the following code which does maximum likelihood estimation for you. Compare the estimates below with your ones above.
+
+14. What do your estimates suggest are the odds ratios for survival relative to 3rd class passengers for being in 1st and 2nd classes respectively?
+
+15. What does your model predict is the change in probability of survival in moving from 3rd to 2nd class?
+
+16. What is the change in probability in moving from 2nd to 1st class?

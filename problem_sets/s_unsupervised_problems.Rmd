@@ -1,0 +1,45 @@
+---
+title: "Problem sheet: clustering and PCA"
+output: html_notebook
+---
+
+# Clustering
+In this problem set, we are going to write our own k-means clustering algorithm. The dataset we are going to use is the famous (Fisher's or Anderson's) iris data set, which gives the measurements in centimeters of the variables sepal length and width and petal length and width, respectively, for 50 flowers from each of 3 species of iris. The species are Iris setosa, versicolor, and virginica.
+
+1. Load the iris data and examine the data. Here we are going to use numerical data on sepal length, sepal width, petal length and petal width to cluster the specimens.
+
+2. Write a function which samples $k$ data points (without replacement) to be the initial centroids.
+
+3. Write a function which calculates the Euclidean distance between two points.
+
+4. Write a function which finds the distance between each row in a matrix (where each of its rows is a data point) and a centroid.
+
+5. Write a function which finds the distance between each row in a matrix (where each of its rows is a data point) and a list of centroids. It may be easiest to return these distances in a matrix, where each row corresponds to a data point and each column to a centroid.
+
+6. Write a function which assigns each data point to a cluster according to its nearest centroid. The function should return a list of centroid ids: one per each data point.
+
+7. Create a function which calculates new centroids using the points which have been assigned to each cluster.
+
+8. Putting your functions together in sequence create a function that does k-means clustering! To do this, do the following:
+
+create a for loop where:
+
+- if first time round loop, choose random centroids to be data points from the dataset; if subsequent, calculate centroids using your function that determines the centroids of each cluster
+- calculates distance of all points from all centroids, and assigns clusters to the points based on their minimal distance
+
+For simplicitly, here we will terminate the loop after 50 iterations.
+
+9. Using $k=3$ clusters, use your k-means clustering function to determine cluster ids.
+
+10. How do your clusters correspond to species?
+
+11. What happens if you choose only two clusters?
+
+# The maths behind PCA
+1. Suppose $X\in \mathbb{R}^{n\times k}$ has rows ($x_i'$) that correspond to individual observations of a system, such that $x_i\sim\mathcal{N}(0,\Sigma)$. Why is $\widehat \Sigma = \frac{1}{n} X'X$ a reasonable estimator of $\Sigma$?
+
+2. We transform the system according to $Y=X A'$ where $A\in\mathbb{R}^{k\times k}$. Find the distribution of a row of $Y$ (we call $y_i'$).
+
+3. Show that choosing $A'$ to have eigenvectors of $\Sigma$ as its columns results in a diagonal covariance matrix in the transformed system.
+
+4. In the transformed system, what are the estimates of the variance of each dimension?
