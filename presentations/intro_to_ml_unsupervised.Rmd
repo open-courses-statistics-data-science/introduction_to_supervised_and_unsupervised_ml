@@ -11,7 +11,7 @@ output:
 
 ---
 
-## Material covered today
+## Material covered
 
 - what is meant by machine learning?
 - dimensionality reduction methods: PCA, t-SNE and UMAP
