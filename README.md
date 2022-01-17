@@ -3,6 +3,8 @@ This course provides a short introduction to supervised machine learning.
 
 The course consists of two lectures and three problem sets.
 
+
+
 ## Lectures
 
 The lectures are:
@@ -20,6 +22,8 @@ The lectures are:
   * Over- and under-fit models and validation / testing sets
   * Logistic regression
 
+
+
 ## Problem sets
 
 AM:
@@ -32,6 +36,8 @@ PM: There is a choice of problem sets for the afternoon
 
 - [*Linear regression*](https://htmlpreview.github.io/?https://github.com/ben18785/introduction_to_supervised_and_unsupervised_ml/blob/main/problem_sets/s_linear_regression_problems.html). Here, participants train their own linear regression model and investigate how the hyperparameters of gradient descent affect training efficiency. The answers to this problem set are [here](https://htmlpreview.github.io/?https://github.com/ben18785/introduction_to_supervised_and_unsupervised_ml/blob/main/problem_sets/answers/s_linear_regression_problems_answers.nb.html).
 - [Logistic regression](https://htmlpreview.github.io/?https://github.com/ben18785/introduction_to_supervised_and_unsupervised_ml/blob/main/problem_sets/s_creating_logistic_regression.nb.html). Here, participants code up their own logistic regression mdoel and use it to determine the factors which influence passenger survival on the Titanic. The dataset for this problem is [here](./problem_sets/data/titanic.csv). The answers to the problem set are [here](https://github.com/ben18785/introduction_to_supervised_ml/blob/main/problem_sets/answers/s_creating_logistic_regression_answers.nb.html).
+
+
 
 
 ## How to learn more?
