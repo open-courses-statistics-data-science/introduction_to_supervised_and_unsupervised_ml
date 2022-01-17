@@ -3,11 +3,6 @@ title: "Titanic: logistic regression"
 output: html_notebook
 ---
 
-```{r}
-rm(list=ls())
-library(tidyverse)
-```
-
 1. Load the Titanic dataset.
 
 2. Make a plot of the fraction surviving in each class

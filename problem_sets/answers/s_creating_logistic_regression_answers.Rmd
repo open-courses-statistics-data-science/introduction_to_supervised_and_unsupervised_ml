@@ -10,7 +10,7 @@ library(tidyverse)
 
 1. Load the Titanic dataset.
 ```{r}
-df <- read.csv("data/titanic.csv")
+df <- read.csv("../data/titanic.csv")
 ```
 
 2. Make a plot of the fraction surviving in each class
