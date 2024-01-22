@@ -28,8 +28,8 @@ The lectures are:
 
 AM:
 
-* [clustering and PCA](https://htmlpreview.github.io/?https://github.com/ben18785/introduction_to_supervised_and_unsupervised_ml/blob/main/problem_sets/s_unsupervised_problems.nb.html). Here, participants code up their own k-means classifier and apply it to the Iris dataset. The answers for this problem set in R are [here](https://htmlpreview.github.io/?https://github.com/ben18785/introduction_to_supervised_and_unsupervised_ml/blob/main/problem_sets/answers/s_unsupervised_problems_answers.nb.html).
-* [dimensionality reduction (and a bit of clustering)]()
+* [clustering and PCA](https://htmlpreview.github.io/?https://github.com/ben18785/introduction_to_supervised_and_unsupervised_ml/blob/main/problem_sets/s_unsupervised_problems.nb.html). Here, participants code up their own k-means clustering algorithm and apply it to the Iris dataset. The answers for this problem set in R are [here](https://htmlpreview.github.io/?https://github.com/ben18785/introduction_to_supervised_and_unsupervised_ml/blob/main/problem_sets/answers/s_unsupervised_problems_answers.nb.html).
+* [dimensionality reduction (and a bit of clustering)](https://htmlpreview.github.io/?https://github.com/ben18785/introduction_to_supervised_and_unsupervised_ml/blob/main/problem_sets/answers/s_problems_unsupervised_learning.nb.hlml). This allows students to explore a range of clustering methods (including k-means and Gaussian mixture models) and apply these to the Iris dataset. In the second part, the students can explore dimensionality reduction methods applied to the MNIST dataset. The answers for this problem set in R are [here](https://htmlpreview.github.io/?https://github.com/ben18785/introduction_to_supervised_and_unsupervised_ml/blob/main/problem_sets/answers/s_problems_unsupervised_learning_answers.nb.html).
 
 PM: There is a choice of problem sets for the afternoon
 
