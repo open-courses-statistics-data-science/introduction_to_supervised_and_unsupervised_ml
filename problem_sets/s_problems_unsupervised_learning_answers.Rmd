@@ -1,0 +1,344 @@
+---
+title: 'Problem sheet: unsupervised learning'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+rm(list=ls())
+library(tidyverse)
+library(reshape2)
+library(Rtsne)
+library(umap)
+```
+
+# Iris data
+1. Load the iris data. Write a k-means algorithm from scratch and use it to cluster the points assuming 3 clusters. Use the Euclidean distance metric.
+```{r}
+x <- iris %>% 
+  select(-Species)
+
+# choose number of clusters, k
+f_choose_random_centroids <- function(x, k=3) {
+  idxs <- 1:nrow(x)
+  idxs <- sample(idxs, k)
+  return(x[idxs, ])
+}
+
+# assign points to nearest centroid
+f_eucl_dist <- function(x1, x2) {return(sqrt(sum((x1 - x2)^2)))}
+f_eucl_dist_all <- function(x, centroid) {
+  return(map_dbl(seq(1, nrow(x), 1), ~f_eucl_dist(centroid, x[., ])))
+}
+f_eucl_dist_centroids <- function(x, centroids) {
+  m_dist <- matrix(nrow = nrow(x), ncol = nrow(centroids))
+  for(i in 1:nrow(centroids))
+    m_dist[, i] <- f_eucl_dist_all(x, centroids[i, ])
+  return(m_dist)
+}
+f_cluster <- function(x, centroids) {
+  m_dist <- f_eucl_dist_centroids(x, centroids)
+  cluster_id <- vector(length = nrow(m_dist))
+  for(i in seq_along(cluster_id))
+    cluster_id[i] <- which.min(m_dist[i, ])
+  return(cluster_id)
+}
+
+# recalculate centroids based on clusters
+f_recalculate_centroids <- function(cluster_ids, x) {
+  df <- x %>% 
+    as.data.frame() %>% 
+    mutate(cluster=cluster_ids)
+  mu <- df %>% 
+    group_by(cluster) %>% 
+    summarise_all(.funs=mean) %>% 
+    select(-cluster)
+  return(mu)  
+}
+
+# here I just use 50 iterations as a stopping criteria
+# better to look at cluster identities and only stop
+# once these stop changing
+f_kmeans <- function(x, k, niter=50) {
+  for(i in 1:niter) {
+    if(i == 1)
+      centroids <- f_choose_random_centroids(x, k)
+    else
+      centroids <- f_recalculate_centroids(cluster_ids, x)
+    cluster_ids <- f_cluster(x, centroids)
+  }
+  return(cluster_ids)
+}
+
+clusters <- f_kmeans(x, 3)
+```
+
+2. How do your clusters correspond to species?
+```{r}
+df <- iris %>% 
+  as.data.frame() %>% 
+  mutate(cluster=clusters)
+table(df$Species, df$cluster)
+```
+Does a pretty good job of separating out the three species. Setosa is more different from the other two classes.
+
+3. What happens if you choose only two clusters?
+```{r}
+clusters <- f_kmeans(x, 2)
+df <- iris %>% 
+  as.data.frame() %>% 
+  mutate(cluster=clusters)
+table(df$Species, df$cluster)
+```
+Splits data in setosa and others. Makes sense, since assuming 3 clusters mixtured up the versicolor and virginica datasets
+
+3. Use Gaussian mixture models to do clustering. How do the results compare when assuming three clusters?
+```{r}
+library(mclust)
+fit <- Mclust(x, G=3, verbose = F)
+df <- iris %>% 
+  as.data.frame() %>% 
+  mutate(cluster=fit$classification)
+table(df$Species, df$cluster)
+```
+Looks pretty good!
+
+4. What if you select number of clusters using (say) BIC?
+```{r}
+fit <- Mclust(x, verbose = F)
+df <- iris %>% 
+  as.data.frame() %>% 
+  mutate(cluster=fit$classification)
+table(df$Species, df$cluster)
+```
+GMM estimates two clusters, with setosa vs other.
+
+5. Graph the modes of the probability distribution fitted to the data in two dimensions. (Note, each mode is four-dimensional multivariate normal but the marginal distribution for any two dimensions is also multivariate normal with the corresponding subset of the mean and covariance matrix.)
+```{r}
+mus <- fit$parameters$mean
+sigmas <- fit$parameters$variance$sigma
+mu_1 <- mus[1:2, 1]
+mu_2 <- mus[1:2, 2]
+sigma_1 <- sigmas[1:2, 1:2, 1]
+sigma_2 <- sigmas[1:2, 1:2, 2]
+
+test_data <- expand_grid(Sepal.Length=seq(min(df$Sepal.Length), max(df$Sepal.Length), length.out = 100),
+                         Sepal.Width=seq(min(df$Sepal.Width), max(df$Sepal.Width), length.out = 100))
+f_1 <- function(x) dmvnorm(x, mu_1, sigma_1)
+f_2 <- function(x) dmvnorm(x, mu_2, sigma_2)
+
+z_1 <- map_dbl(seq_along(test_data$Sepal.Length), ~f_1(test_data[., ]))
+z_2 <- map_dbl(seq_along(test_data$Sepal.Length), ~f_2(test_data[., ]))
+
+test_data1 <- test_data %>% 
+  mutate(z=z_1) %>% 
+  mutate(type="mode 1")
+test_data2 <- test_data %>% 
+  mutate(z=z_2) %>% 
+  mutate(type="mode 2")
+
+
+df1 <- df %>% 
+  select(Sepal.Length, Sepal.Width, Species) %>% 
+  mutate(type="actual") %>% 
+  bind_rows(test_data1) %>% 
+  bind_rows(test_data2)
+
+ggplot(df1 %>% filter(type=="actual"),
+       aes(x=Sepal.Length, y=Sepal.Width)) +
+  geom_point(aes(colour=as.factor(Species))) +
+  geom_contour(data=df1 %>% filter(type!="actual"),
+               aes(z=z, colour=as.factor(type)))
+```
+
+6. Use PCA to project the data onto the first two principal components. Does this separate out species? What do these two components mean?
+```{r}
+# first check for normality -- not perfect due to multimodality
+iris %>% 
+  melt(id.vars="Species") %>% 
+  ggplot(aes(x=value)) +
+  geom_histogram() +
+  facet_wrap(~variable)
+
+# do PCA
+x <- iris %>% 
+  select(-Species)
+pca <- prcomp(x)
+df <- iris %>% 
+  cbind(pca$x)
+df %>% 
+  ggplot(aes(x=PC1, y=PC2, colour=as.factor(Species))) +
+  geom_point()
+
+# loadings
+pca$rotation[, 1:2] %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  melt(id.vars="rowname") %>% 
+  ggplot(aes(x=rowname, y=value)) +
+  geom_col() +
+  coord_flip() +
+  facet_grid(~variable)
+```
+
+7. Use tsne to reduce the dimensionality of the data, and visualise the points in two dimensions. How well does the dimensionality reduction separate out the species? How does this vary as a function of the chosen perplexity?
+```{r}
+df <- df %>% unique()
+x <- x %>% unique()
+# Perplexity=2
+tsne <- Rtsne::Rtsne(x %>% unique(), perplexity=2)
+scores <- tsne$Y
+colnames(scores) <- map_chr(1:2, ~paste0("Dim.", .))
+df_temp <- df %>% cbind(scores)
+
+df_temp %>% 
+  ggplot(aes(x=Dim.1, y=Dim.2, colour=Species)) +
+  geom_point() +
+  theme(legend.text = element_text(size=16),
+        legend.title = element_text(size=16))
+
+# Perplexity=40
+tsne <- Rtsne::Rtsne(x %>% unique(), perplexity=40)
+scores <- tsne$Y
+colnames(scores) <- map_chr(1:2, ~paste0("Dim.", .))
+df_temp <- df %>% cbind(scores)
+
+df_temp %>% 
+  ggplot(aes(x=Dim.1, y=Dim.2, colour=Species)) +
+  geom_point() +
+  theme(legend.text = element_text(size=16),
+        legend.title = element_text(size=16))
+```
+
+8. Use UMAP to reduce dimensionality. Visualise the decomposition as a funtion of min_dist and n_neighbour parameters. How much stochasticity is there between runs?
+```{r}
+custom.settings = umap::umap.defaults
+custom.settings$n_neighbors <- 5
+custom.settings$min_dist <- 0.9
+fit <- umap::umap(x, verbose=T,
+                  config = custom.settings,
+                  preserve.seed = F)
+scores <- fit$layout
+colnames(scores) <- map_chr(1:2, ~paste0("Dim.", .))
+df_temp <- df %>% cbind(scores)
+df_temp %>% 
+  ggplot(aes(x=Dim.1, y=Dim.2, colour=Species)) +
+  geom_point() +
+  theme(legend.text = element_text(size=16),
+        legend.title = element_text(size=16))
+```
+
+# MNIST -- understanding handwritten digits
+1. Download and get test MNIST dataset and put into a matrix of size 10000 x 785, where one column represents the number label. In R, code that downloads and formats both the training and testing data is:
+```{r}
+download.file("http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz",
+              "train-images-idx3-ubyte.gz")
+download.file("http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz",
+              "train-labels-idx1-ubyte.gz")
+download.file("http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz",
+              "t10k-images-idx3-ubyte.gz")
+download.file("http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz",
+              "t10k-labels-idx1-ubyte.gz")
+
+# gunzip the files
+R.utils::gunzip("train-images-idx3-ubyte.gz")
+R.utils::gunzip("train-labels-idx1-ubyte.gz")
+R.utils::gunzip("t10k-images-idx3-ubyte.gz")
+R.utils::gunzip("t10k-labels-idx1-ubyte.gz")
+
+# helper function for visualization
+show_digit = function(arr784, col = gray(12:1 / 12), ...) {
+  image(matrix(as.matrix(arr784[-785]), nrow = 28)[, 28:1], col = col, ...)
+}
+
+# load image files
+load_image_file = function(filename) {
+  ret = list()
+  f = file(filename, 'rb')
+  readBin(f, 'integer', n = 1, size = 4, endian = 'big')
+  n    = readBin(f, 'integer', n = 1, size = 4, endian = 'big')
+  nrow = readBin(f, 'integer', n = 1, size = 4, endian = 'big')
+  ncol = readBin(f, 'integer', n = 1, size = 4, endian = 'big')
+  x = readBin(f, 'integer', n = n * nrow * ncol, size = 1, signed = FALSE)
+  close(f)
+  data.frame(matrix(x, ncol = nrow * ncol, byrow = TRUE))
+}
+
+# load label files
+load_label_file = function(filename) {
+  f = file(filename, 'rb')
+  readBin(f, 'integer', n = 1, size = 4, endian = 'big')
+  n = readBin(f, 'integer', n = 1, size = 4, endian = 'big')
+  y = readBin(f, 'integer', n = n, size = 1, signed = FALSE)
+  close(f)
+  y
+}
+
+# load images
+train = load_image_file("train-images-idx3-ubyte")
+test  = load_image_file("t10k-images-idx3-ubyte")
+
+# load labels
+train$y = as.factor(load_label_file("train-labels-idx1-ubyte"))
+test$y  = as.factor(load_label_file("t10k-labels-idx1-ubyte"))
+```
+
+2. Visualise some of the digits in the dataset
+```{r}
+show_digit(test[2, ])
+```
+3. Subset the test data to consist of 1000 instances. Use UMAP to reduce dimensionality down to two. What choice of the parameters best separates the classes?
+```{r}
+test <- test[1:1000, ]
+custom.settings = umap::umap.defaults
+custom.settings$n_neighbors <- 15
+custom.settings$min_dist <- 0.1
+fit <- umap::umap(test[, 1:784], verbose=T,
+                  config = custom.settings,
+                  preserve.seed = T)
+scores <- fit$layout %>% 
+  as.data.frame() %>% 
+  mutate(label=test$y) %>% 
+  rename(number=label)
+scores %>% 
+  ggplot(aes(x=V1, y=V2, colour=as.factor(number))) +
+  geom_point()
+```
+
+4. Do the overlaps between the classes make sense? Can you extract those overlapping cases and visualise the digits?
+```{r}
+# extract 0 labels and use GMM clustering to fit outliers
+scores_0 <- scores %>% 
+  mutate(idx=seq_along(V1)) %>% 
+  filter(number==0)
+fit <- Mclust(scores_0[, 1:2], G=6, verbose = F)
+scores_0 <- scores_0 %>% 
+  mutate(cluster=fit$classification)
+scores_0 %>% 
+  ggplot(aes(x=V1, y=V2, colour=as.factor(cluster))) +
+  geom_point()
+
+# Look at cluster 6
+idxs <- scores_0 %>% 
+  filter(cluster==6) %>% 
+  pull(idx)
+show_digit(test[idxs[1], ])
+show_digit(test[idxs[2], ])
+show_digit(test[idxs[3], ])
+show_digit(test[idxs[4], ])
+show_digit(test[idxs[5], ])
+```
+Makes sense: these zero digits actually share similarities with sixes.
+
+5. How does the UMAP projection compare with your best tsne projection?
+```{r}
+tsne <- Rtsne::Rtsne(test[, 1:784], perplexity=10)
+scores <- tsne$Y %>% 
+  as.data.frame() %>% 
+  mutate(label=test$y) %>% 
+  rename(number=label)
+scores %>% 
+  ggplot(aes(x=V1, y=V2, colour=as.factor(number))) +
+  geom_point()
+```
