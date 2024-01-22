@@ -1,0 +1,36 @@
+---
+title: 'Problem sheet: unsupervised learning'
+output:
+  html_document:
+    df_print: paged
+---
+
+# Iris data
+1. Load the iris data. Write a k-means algorithm from scratch and use it to cluster the points assuming 3 clusters. Use the Euclidean distance metric.
+
+2. How do your clusters correspond to species?
+
+3. What happens if you choose only two clusters?
+
+4. Use Gaussian mixture models to do clustering. How do the results compare when assuming three clusters?
+
+5. What if you select number of clusters using (say) BIC?
+
+6. Graph the modes of the probability distribution fitted to the data in two dimensions. (Note, each mode is four-dimensional multivariate normal but the marginal distribution for any two dimensions is also multivariate normal with the corresponding subset of the mean and covariance matrix.)
+
+7. Use PCA to project the data onto the first two principal components. Does this separate out species? What do these two components mean?
+
+8. Use tsne to reduce the dimensionality of the data, and visualise the points in two dimensions. How well does the dimensionality reduction separate out the species? How does this vary as a function of the chosen perplexity?
+
+9. Use UMAP to reduce dimensionality. Visualise the decomposition as a funtion of min_dist and n_neighbour parameters. How much stochasticity is there between runs?
+
+# MNIST -- understanding handwritten digits
+1. Download and get test MNIST dataset and put into a matrix of size 10000 x 785, where one column represents the number label. In R, code that downloads and formats both the training and testing data is:
+
+2. Visualise some of the digits in the dataset
+
+3. Subset the test data to consist of 1000 instances. Use UMAP to reduce dimensionality down to two. What choice of the parameters best separates the classes?
+
+4. Do the overlaps between the classes make sense? Can you extract those overlapping cases and visualise the digits?
+
+5. How does the UMAP projection compare with your best tsne projection?

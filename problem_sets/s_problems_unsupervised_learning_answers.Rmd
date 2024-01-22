@@ -93,7 +93,7 @@ table(df$Species, df$cluster)
 ```
 Splits data in setosa and others. Makes sense, since assuming 3 clusters mixtured up the versicolor and virginica datasets
 
-3. Use Gaussian mixture models to do clustering. How do the results compare when assuming three clusters?
+4. Use Gaussian mixture models to do clustering. How do the results compare when assuming three clusters?
 ```{r}
 library(mclust)
 fit <- Mclust(x, G=3, verbose = F)
@@ -104,7 +104,7 @@ table(df$Species, df$cluster)
 ```
 Looks pretty good!
 
-4. What if you select number of clusters using (say) BIC?
+5. What if you select number of clusters using (say) BIC?
 ```{r}
 fit <- Mclust(x, verbose = F)
 df <- iris %>% 
@@ -114,7 +114,7 @@ table(df$Species, df$cluster)
 ```
 GMM estimates two clusters, with setosa vs other.
 
-5. Graph the modes of the probability distribution fitted to the data in two dimensions. (Note, each mode is four-dimensional multivariate normal but the marginal distribution for any two dimensions is also multivariate normal with the corresponding subset of the mean and covariance matrix.)
+6. Graph the modes of the probability distribution fitted to the data in two dimensions. (Note, each mode is four-dimensional multivariate normal but the marginal distribution for any two dimensions is also multivariate normal with the corresponding subset of the mean and covariance matrix.)
 ```{r}
 mus <- fit$parameters$mean
 sigmas <- fit$parameters$variance$sigma
@@ -152,7 +152,7 @@ ggplot(df1 %>% filter(type=="actual"),
                aes(z=z, colour=as.factor(type)))
 ```
 
-6. Use PCA to project the data onto the first two principal components. Does this separate out species? What do these two components mean?
+7. Use PCA to project the data onto the first two principal components. Does this separate out species? What do these two components mean?
 ```{r}
 # first check for normality -- not perfect due to multimodality
 iris %>% 
@@ -182,7 +182,7 @@ pca$rotation[, 1:2] %>%
   facet_grid(~variable)
 ```
 
-7. Use tsne to reduce the dimensionality of the data, and visualise the points in two dimensions. How well does the dimensionality reduction separate out the species? How does this vary as a function of the chosen perplexity?
+8. Use tsne to reduce the dimensionality of the data, and visualise the points in two dimensions. How well does the dimensionality reduction separate out the species? How does this vary as a function of the chosen perplexity?
 ```{r}
 df <- df %>% unique()
 x <- x %>% unique()
@@ -211,7 +211,7 @@ df_temp %>%
         legend.title = element_text(size=16))
 ```
 
-8. Use UMAP to reduce dimensionality. Visualise the decomposition as a funtion of min_dist and n_neighbour parameters. How much stochasticity is there between runs?
+9. Use UMAP to reduce dimensionality. Visualise the decomposition as a funtion of min_dist and n_neighbour parameters. How much stochasticity is there between runs?
 ```{r}
 custom.settings = umap::umap.defaults
 custom.settings$n_neighbors <- 5
