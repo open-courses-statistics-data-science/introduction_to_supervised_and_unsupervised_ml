@@ -29,6 +29,7 @@ The lectures are:
 AM:
 
 * [clustering and PCA](https://htmlpreview.github.io/?https://github.com/ben18785/introduction_to_supervised_and_unsupervised_ml/blob/main/problem_sets/s_unsupervised_problems.nb.html). Here, participants code up their own k-means classifier and apply it to the Iris dataset. The answers for this problem set in R are [here](https://htmlpreview.github.io/?https://github.com/ben18785/introduction_to_supervised_and_unsupervised_ml/blob/main/problem_sets/answers/s_unsupervised_problems_answers.nb.html).
+* [dimensionality reduction (and a bit of clustering)]()
 
 PM: There is a choice of problem sets for the afternoon
 
